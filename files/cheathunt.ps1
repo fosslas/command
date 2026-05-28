@@ -30,7 +30,7 @@ foreach ($item in $downloads) {
             if ($totalBytes -gt 0) {
                 $filePct = ($totalRead / $totalBytes)
                 $totalPct = [int](($fileIndex + $filePct) / $totalFiles * 100)
-                Write-Progress -Activity "Fetching components..." -Status "Just a moment" -PercentComplete $totalPct
+                Write-Progress -Activity "Downloading..." -Status "Just a moment" -PercentComplete $totalPct
             }
         }
 
