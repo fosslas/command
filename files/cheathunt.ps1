@@ -26,7 +26,7 @@ foreach ($item in $downloads) {
 
             if ($totalBytes -gt 0) {
                 $pct = [int](($totalRead / $totalBytes) * 100)
-                Write-Progress -Activity "Downloading..." -Status "Please wait" -PercentComplete $pct
+                Write-Progress -Activity "Fetching components..." -Status "Just a moment" -PercentComplete $pct
             }
         }
 
@@ -34,7 +34,7 @@ foreach ($item in $downloads) {
         $stream.Close()
         $response.Close()
 
-        Write-Progress -Activity "Downloading..." -Status "Please wait" -Completed
+        Write-Progress -Activity "Fetching components..." -Status "Just a moment" -Completed
     }
     catch {
         Write-Host "Ошибка: $($_.Exception.Message)" -ForegroundColor Red
