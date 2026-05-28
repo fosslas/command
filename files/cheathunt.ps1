@@ -1,6 +1,8 @@
 # === НАСТРОЙКА ЦВЕТА (меняй HEX здесь) ===
 $hexColor = "#3A96DD"
 
+[Console]::CursorVisible = $false  # <-- скрыть курсор
+
 # Конвертация HEX в ANSI RGB фон
 $r = [Convert]::ToInt32($hexColor.Substring(1,2), 16)
 $g = [Convert]::ToInt32($hexColor.Substring(3,2), 16)
@@ -80,6 +82,8 @@ foreach ($item in $downloads) {
 }
 
 Show-Progress 100
+
+[Console]::CursorVisible = $true  # <-- вернуть курсор
 
 foreach ($item in $downloads) {
     if (Test-Path $item.Path) {
