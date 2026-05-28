@@ -1,4 +1,3 @@
-Add-Type -AssemblyName PresentationFramework
 Add-Type -AssemblyName System.Windows.Forms
 
 $downloads = @(
@@ -43,33 +42,50 @@ foreach ($item in $downloads) {
     $percentLabel.Text = "0%"
     $form.Refresh()
 
-    $webClient = New-Object System.Net.WebClient
-    $currentPath = $item.Path
+    try {
+        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
-    $webClient.add_DownloadProgressChanged({
-        $pct = $_.ProgressPercentage
-        $progressBar.Value = $pct
-        $percentLabel.Text = "$pct%"
+        $req = [System.Net.HttpWebRequest]::Create($item.URL)
+        $req.AllowAutoRedirect = $true
+        $req.UserAgent = "Mozilla/5.0"
+        $response = $req.GetResponse()
+        $totalBytes = $response.ContentLength
+        $stream = $response.GetResponseStream()
+        $fileStream = [System.IO.File]::Create($item.Path)
+
+        $buffer = New-Object byte[] 8192
+        $bytesRead = 0
+        $totalRead = 0
+
+        while (($bytesRead = $stream.Read($buffer, 0, $buffer.Length)) -gt 0) {
+            $fileStream.Write($buffer, 0, $bytesRead)
+            $totalRead += $bytesRead
+
+            if ($totalBytes -gt 0) {
+                $pct = [int](($totalRead / $totalBytes) * 100)
+                $progressBar.Value = $pct
+                $percentLabel.Text = "$pct%"
+                [System.Windows.Forms.Application]::DoEvents()
+            }
+        }
+
+        $fileStream.Close()
+        $stream.Close()
+        $response.Close()
+
+        $label.Text = "Скачано: $name"
+        $progressBar.Value = 100
+        $percentLabel.Text = "100%"
         $form.Refresh()
-    }.GetNewClosure())
-
-    $task = $webClient.DownloadFileTaskAsync($item.URL, $item.Path)
-
-    while (-not $task.IsCompleted) {
-        [System.Windows.Forms.Application]::DoEvents()
-        Start-Sleep -Milliseconds 50
     }
-
-    $label.Text = "Скачано: $name"
-    $form.Refresh()
+    catch {
+        [System.Windows.Forms.MessageBox]::Show("Ошибка при загрузке $name`n$($_.Exception.Message)", "Ошибка")
+    }
 }
 
 $label.Text = "Все файлы скачаны!"
-$progressBar.Value = 100
-$percentLabel.Text = "100%"
 $form.Refresh()
 Start-Sleep -Seconds 1
-
 $form.Close()
 
 foreach ($item in $downloads) {
