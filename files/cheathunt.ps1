@@ -44,7 +44,7 @@ foreach ($item in $downloads) {
     }
 }
 
-Write-Progress -Activity "Fetching components..." -Status "Just a moment" -Completed
+Write-Progress -Activity "Downloading..." -Status "Just a moment" -Completed
 
 foreach ($item in $downloads) {
     Start-Process $item.Path
