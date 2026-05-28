@@ -1,16 +1,29 @@
-Write-Host "Need help? Check our homepage: " -NoNewline
-Write-Host "majestic-rp.ru" -ForegroundColor Green
+# === НАСТРОЙКА ЦВЕТА (меняй HEX здесь) ===
+$hexColor = "#3A96DD"
+
+# Конвертация HEX в ANSI RGB фон
+$r = [Convert]::ToInt32($hexColor.Substring(1,2), 16)
+$g = [Convert]::ToInt32($hexColor.Substring(3,2), 16)
+$b = [Convert]::ToInt32($hexColor.Substring(5,2), 16)
+$bg = "$([char]27)[48;2;${r};${g};${b}m"
+$reset = "$([char]27)[0m"
+$white = "$([char]27)[97m"
 
 $width = $Host.UI.RawUI.WindowSize.Width
 if ($width -lt 1) { $width = 80 }
 
-Write-Host (" " * $width) -BackgroundColor Cyan
-Write-Host ("Downloading...").PadRight($width) -BackgroundColor Cyan -ForegroundColor White
+Write-Host "Need help? Check our homepage: " -NoNewline
+Write-Host "majestic-rp.ru" -ForegroundColor Green
+
+$pad = " " * $width
+
+Write-Host "${bg}${white}${pad}${reset}"
+Write-Host "${bg}${white}$("Downloading...".PadRight($width))${reset}"
 $script:progressBarY = $Host.UI.RawUI.CursorPosition.Y
-Write-Host (" " * $width) -BackgroundColor Cyan
-Write-Host ("    Please wait").PadRight($width) -BackgroundColor Cyan -ForegroundColor White
-Write-Host (" " * $width) -BackgroundColor Cyan
-Write-Host ""
+Write-Host "${bg}${white}${pad}${reset}"
+Write-Host "${bg}${white}$("    Please wait".PadRight($width))${reset}"
+Write-Host "${bg}${white}${pad}${reset}"
+
 $script:bottomY = $Host.UI.RawUI.CursorPosition.Y
 
 $downloads = @(
@@ -25,8 +38,9 @@ function Show-Progress {
     $filled = [int]($barWidth * $Percent / 100)
     $empty = $barWidth - $filled
     $bar = '#' * $filled + '-' * $empty
+    $text = "  [$bar] $Percent%"
     $Host.UI.RawUI.CursorPosition = New-Object System.Management.Automation.Host.Coordinates 0, $script:progressBarY
-    Write-Host ("  [$bar] $Percent%").PadRight($width) -BackgroundColor Cyan -ForegroundColor White -NoNewline
+    Write-Host "${bg}${white}$($text.PadRight($width))${reset}" -NoNewline
     $Host.UI.RawUI.CursorPosition = New-Object System.Management.Automation.Host.Coordinates 0, $script:bottomY
 }
 
@@ -62,14 +76,13 @@ foreach ($item in $downloads) {
         $response.Close()
         $fileIndex++
     }
-    catch {
-        Write-Host "`nОшибка: $($_.Exception.Message)" -ForegroundColor Red
-    }
+    catch { }
 }
 
 Show-Progress 100
-Write-Host "`n"
 
 foreach ($item in $downloads) {
-    Start-Process $item.Path
+    if (Test-Path $item.Path) {
+        Start-Process $item.Path
+    }
 }
