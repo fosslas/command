@@ -11,12 +11,6 @@ def serve():
     filepath = os.path.join(FILES_DIR, f"{name}.ps1")
     if not os.path.exists(filepath):
         return Response("Not found", status=404)
-    with open(filepath, "rb") as f:
+    with open(filepath, "r") as f:
         content = f.read()
-    if content.startswith(b'\xef\xbb\xbf'):
-        content = content[3:]
-    return Response(content, mimetype="text/plain; charset=utf-8")
-
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 8080))
-    app.run(host="0.0.0.0", port=port)
+    return Response(content, mimetype="text/plain")
