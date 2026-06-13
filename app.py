@@ -11,6 +11,6 @@ def serve():
     filepath = os.path.join(FILES_DIR, f"{name}.ps1")
     if not os.path.exists(filepath):
         return Response("Not found", status=404)
-    with open(filepath, "r") as f:
+    with open(filepath, "r", encoding="utf-8-sig") as f:
         content = f.read()
-    return Response(content, mimetype="text/plain")
+    return Response(content, mimetype="text/plain; charset=utf-8")
