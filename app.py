@@ -14,3 +14,8 @@ def serve():
     with open(filepath, "r", encoding="utf-8-sig") as f:
         content = f.read()
     return Response(content, mimetype="text/plain; charset=utf-8")
+
+
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 8080))
+    app.run(host="0.0.0.0", port=port)
